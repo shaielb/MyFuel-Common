@@ -56,4 +56,8 @@ public class StringUtil {
 		}
 		return list.toArray(new String[list.size()]);
 	}
+	
+	public static String getTitle(String colName) {
+		return swithToUpperCase(colName, "_");
+	}
 }

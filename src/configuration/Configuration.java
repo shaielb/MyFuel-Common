@@ -1,41 +1,45 @@
 package configuration;
 
 import java.io.File;
-import java.io.IOException;
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
-
-import javax.xml.parsers.ParserConfigurationException;
-
-import org.xml.sax.SAXException;
 
 import xml.parser.XmlParser;
 
 @SuppressWarnings("unchecked")
 public class Configuration {
 
-	public static Map<String, Object> configuration() {
-		String localPath = System.getProperty("user.dir");
-		String uri = String.format("%s\\Configurations\\confuration.xml", localPath);
+	public static Map<String, Object> configuration(String path) {
 		try {
-			if (new File(uri).exists()) {
-				Map<String, Object> main = XmlParser.parse(uri);
+			if (new File(path).exists()) {
+				Map<String, Object> main = XmlParser.parse(path);
 				if (main != null) {
 					return (Map<String, Object>) main.get("configuration");
 				}
 			}
-		} catch (SAXException e1) {
-			e1.printStackTrace();
-		} catch (IOException e1) {
-			e1.printStackTrace();
-		} catch (ParserConfigurationException e1) {
-			e1.printStackTrace();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+	
+	public static Map<String, Object> configuration(InputStream is) {
+		try {
+			Map<String, Object> main = XmlParser.parse(is);
+			if (main != null) {
+				return (Map<String, Object>) main.get("configuration");
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
 		return null;
 	}
 	
 	public static Map<String, String> arguemnts() {
-		Object configuration = configuration();
+		String localPath = System.getProperty("user.dir");
+		String uri = String.format("%s\\Configurations\\confuration.xml", localPath);
+		Object configuration = configuration(uri);
 		if (configuration != null) {
 			Object arguments = ((Map<String, Object>) configuration).get("arguments");
 			if (arguments != null) {

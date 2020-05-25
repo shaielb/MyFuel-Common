@@ -2,6 +2,7 @@ package xml.parser;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -56,6 +57,20 @@ public class XmlParser {
 		return node.getTextContent();
 	}
 
+	public static Map<String, Object> parse(InputStream is) throws SAXException, IOException, ParserConfigurationException {
+		DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+		DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
+		
+		Document doc = dBuilder.parse(is);
+
+		doc.getDocumentElement().normalize();
+
+		Map<String, Object> map = new HashMap<String, Object>();
+		Node node = doc.getDocumentElement();
+		map.put(node.getNodeName(), constructMap(node));
+		return map;
+	}
+	
 	public static Map<String, Object> parse(String path) throws SAXException, IOException, ParserConfigurationException {
 		File fXmlFile = new File(path);
 		if (!fXmlFile.exists()) {
@@ -63,6 +78,7 @@ public class XmlParser {
 		}
 		DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
 		DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
+		
 		Document doc = dBuilder.parse(fXmlFile);
 
 		doc.getDocumentElement().normalize();
@@ -75,6 +91,12 @@ public class XmlParser {
 	
 	public static Map<String, Object> parse(String path, String node) throws SAXException, IOException, ParserConfigurationException {
 		Map<String, Object> map = parse(path);
+		map = findNode(map, node);
+		return map;
+	}
+	
+	public static Map<String, Object> parse(InputStream is, String node) throws SAXException, IOException, ParserConfigurationException {
+		Map<String, Object> map = parse(is);
 		map = findNode(map, node);
 		return map;
 	}
