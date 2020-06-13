@@ -7,9 +7,17 @@ import java.util.Map;
 
 import xml.parser.XmlParser;
 
+/**
+ * @author shaielb
+ *
+ */
 @SuppressWarnings("unchecked")
 public class Configuration {
 
+	/**
+	 * @param path
+	 * @return
+	 */
 	public static Map<String, Object> configuration(String path) {
 		try {
 			if (new File(path).exists()) {
@@ -24,6 +32,10 @@ public class Configuration {
 		return null;
 	}
 	
+	/**
+	 * @param is
+	 * @return
+	 */
 	public static Map<String, Object> configuration(InputStream is) {
 		try {
 			Map<String, Object> main = XmlParser.parse(is);
@@ -36,6 +48,9 @@ public class Configuration {
 		return null;
 	}
 	
+	/**
+	 * @return
+	 */
 	public static Map<String, String> arguemnts() {
 		String localPath = System.getProperty("user.dir");
 		String uri = String.format("%s\\Configurations\\confuration.xml", localPath);

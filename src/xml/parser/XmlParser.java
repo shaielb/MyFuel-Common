@@ -1,7 +1,6 @@
 package xml.parser;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
@@ -12,16 +11,24 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-import org.xml.sax.SAXException;
 
 @SuppressWarnings("unchecked")
 public class XmlParser {
 
+	public interface NodeAnalyzer {
+		public void analyze(Node node);
+	}
+
+	/**
+	 * @param <T>
+	 * @param path
+	 * @param c
+	 * @return
+	 */
 	public static <T> T parseToObject(String path, Class<T> c) {
 		File xmlFile = new File(path);
 
@@ -40,15 +47,23 @@ public class XmlParser {
 		return item;
 	}
 
-	private static Object constructMap(Node node) {
+	/**
+	 * @param node
+	 * @param nodeAnalyzer
+	 * @return
+	 */
+	private static Object constructMap(Node node, NodeAnalyzer nodeAnalyzer) {
 		NodeList list = node.getChildNodes();
 		if (list != null && list.getLength() > 0) {
 			Map<String, Object> map = new HashMap<String, Object>();
 			boolean found = false;
 			for (int i = 0; i < list.getLength(); ++i) {
 				if (list.item(i).getNodeType() == Node.ELEMENT_NODE) {
+					if (nodeAnalyzer != null) {
+						nodeAnalyzer.analyze(list.item(i));
+					}
 					found = true;
-					map.put(list.item(i).getNodeName(), constructMap(list.item(i)));
+					map.put(list.item(i).getNodeName(), constructMap(list.item(i), nodeAnalyzer));
 				}
 			}
 			if (found)
@@ -56,51 +71,130 @@ public class XmlParser {
 		}
 		return node.getTextContent();
 	}
+	
+	/**
+	 * @param is
+	 * @return
+	 * @throws Exception
+	 */
+	public static Map<String, Object> parse(InputStream is) throws Exception {
+		return parse(is, (NodeAnalyzer) null);
+	}
 
-	public static Map<String, Object> parse(InputStream is) throws SAXException, IOException, ParserConfigurationException {
+	/**
+	 * @param is
+	 * @param nodeAnalyzer
+	 * @return
+	 * @throws Exception
+	 */
+	public static Map<String, Object> parse(InputStream is, NodeAnalyzer nodeAnalyzer) throws Exception {
 		DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
 		DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
-		
+
 		Document doc = dBuilder.parse(is);
 
 		doc.getDocumentElement().normalize();
 
 		Map<String, Object> map = new HashMap<String, Object>();
 		Node node = doc.getDocumentElement();
-		map.put(node.getNodeName(), constructMap(node));
+		if (nodeAnalyzer != null) {
+			nodeAnalyzer.analyze(node);
+		}
+		map.put(node.getNodeName(), constructMap(node, nodeAnalyzer));
 		return map;
 	}
 	
-	public static Map<String, Object> parse(String path) throws SAXException, IOException, ParserConfigurationException {
+	/**
+	 * @param path
+	 * @return
+	 * @throws Exception
+	 */
+	public static Map<String, Object> parse(String path) throws Exception {
+		return parse(path, (NodeAnalyzer) null);
+	}
+
+	/**
+	 * @param path
+	 * @param nodeAnalyzer
+	 * @return
+	 * @throws Exception
+	 */
+	public static Map<String, Object> parse(String path, NodeAnalyzer nodeAnalyzer) throws Exception {
 		File fXmlFile = new File(path);
 		if (!fXmlFile.exists()) {
 			return null;
 		}
 		DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
 		DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
-		
+
 		Document doc = dBuilder.parse(fXmlFile);
 
 		doc.getDocumentElement().normalize();
 
 		Map<String, Object> map = new HashMap<String, Object>();
 		Node node = doc.getDocumentElement();
-		map.put(node.getNodeName(), constructMap(node));
+		if (nodeAnalyzer != null) {
+			nodeAnalyzer.analyze(node);
+		}
+		map.put(node.getNodeName(), constructMap(node, nodeAnalyzer));
 		return map;
 	}
-	
-	public static Map<String, Object> parse(String path, String node) throws SAXException, IOException, ParserConfigurationException {
-		Map<String, Object> map = parse(path);
+
+	/**
+	 * @param path
+	 * @param nodeAnalyzer
+	 * @param node
+	 * @return
+	 * @throws Exception
+	 */
+	public static Map<String, Object> parse(String path, NodeAnalyzer nodeAnalyzer, String node) throws Exception {
+		Map<String, Object> map = parse(path, nodeAnalyzer);
 		map = findNode(map, node);
 		return map;
 	}
-	
-	public static Map<String, Object> parse(InputStream is, String node) throws SAXException, IOException, ParserConfigurationException {
-		Map<String, Object> map = parse(is);
+
+	/**
+	 * @param is
+	 * @param nodeAnalyzer
+	 * @param node
+	 * @return
+	 * @throws Exception
+	 */
+	public static Map<String, Object> parse(InputStream is, NodeAnalyzer nodeAnalyzer, String node) throws Exception {
+		Map<String, Object> map = parse(is, nodeAnalyzer);
 		map = findNode(map, node);
 		return map;
 	}
-	
+
+	/**
+	 * @param path
+	 * @param node
+	 * @return
+	 * @throws Exception
+	 */
+	public static Map<String, Object> parse(String path, String node) throws Exception {
+		Map<String, Object> map = parse(path, (NodeAnalyzer) null);
+		map = findNode(map, node);
+		return map;
+	}
+
+	/**
+	 * @param is
+	 * @param node
+	 * @return
+	 * @throws Exception
+	 */
+	public static Map<String, Object> parse(InputStream is, String node) throws Exception {
+		Map<String, Object> map = parse(is, (NodeAnalyzer) null);
+		map = findNode(map, node);
+		return map;
+	}
+
+	/**
+	 * @param map
+	 * @param node
+	 * @return
+	 */
 	@SuppressWarnings("serial")
 	private static Map<String, Object> findNode(Map<String, Object> map, String node) {
 		for (Entry<String, Object> entry : map.entrySet()) {
