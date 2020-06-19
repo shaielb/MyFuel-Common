@@ -113,4 +113,8 @@ public class StringUtil {
 		colName = swithToUpperCase(colName, "_");
 		return String.join(" ", separateByUpperCase(colName));
 	}
+	
+	public static boolean isEmpty(String str) {
+		return str == null || str.equals("");
+	}
 }
